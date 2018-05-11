@@ -32,10 +32,8 @@ one sig FanCtrl, HeaterCtrl, PumpCtrl extends ControlUnitType {}
 ----------------------------------------------------------------------------------
 
 abstract sig Specialist{
-	modifiable_control: set Control,
-	visible_control: set Control,
-	modifiable_signal: set Signal, 
-	visible_signal: set Signal,
+	modifiable: set EObject,
+	visible: set EObject,
     responsibility : set Composit
 }
 
@@ -48,69 +46,95 @@ sig  FanSpecialist, HeaterSpecialist, PumpSpecialist extends Specialist {}
 fact{
 	all spec : Specialist{
 		all comp : Composit{
-			comp not in spec.responsibility implies comp.submodules not in spec.modifiable_control
+			comp not in spec.responsibility implies comp.submodules not in spec.modifiable
 		}
 	}
 }
-
+/*
 //facSpecialist constraints
 
 fact{
-	all fanSpec : FanSpecialist | fanSpec.modifiable_control.type in FanCtrl
+	all fanSpec : FanSpecialist | fanSpec.modifiable.type in FanCtrl
 }
 
 fact{
-	all fanSpec : FanSpecialist | fanSpec.modifiable_signal in fanSpec.modifiable_control.provides
+	all fanSpec : FanSpecialist | fanSpec.modifiable in fanSpec.modifiable.provides
 }
 
 fact{
-	all fanSpec : FanSpecialist | fanSpec.modifiable_control.provides  in fanSpec.modifiable_signal
+	all fanSpec : FanSpecialist | fanSpec.modifiable.provides  in fanSpec.modifiable
 }
 
 //heaterSpesialist contraints
 fact{
-	all heatSpec : HeaterSpecialist | heatSpec.modifiable_control.type in HeaterCtrl
+	all heatSpec : HeaterSpecialist | heatSpec.modifiable.type in HeaterCtrl
 }
 
 fact{
-	all heatSpec : HeaterSpecialist | heatSpec.modifiable_signal in heatSpec.modifiable_control.provides
+	all heatSpec : HeaterSpecialist | heatSpec.modifiable in heatSpec.modifiable.provides
 }
 
 fact{
-	all heatSpec : HeaterSpecialist | heatSpec.modifiable_control.provides in heatSpec.modifiable_signal
+	all heatSpec : HeaterSpecialist | heatSpec.modifiable.provides in heatSpec.modifiable
 }
 
 //pumpSpecialist constraints
 fact{
-	all pumpSpec : PumpSpecialist | pumpSpec.modifiable_control.type in PumpCtrl
+	all pumpSpec : PumpSpecialist | pumpSpec.modifiable.type in PumpCtrl
 }
 
 fact{
-	all pumpSpec : PumpSpecialist | pumpSpec.modifiable_signal in pumpSpec.modifiable_control.provides
+	all pumpSpec : PumpSpecialist | pumpSpec.modifiable in pumpSpec.modifiable.provides
 }
 
 fact{
-	all pumpSpec : PumpSpecialist | pumpSpec.modifiable_control.provides in pumpSpec.modifiable_signal
+	all pumpSpec : PumpSpecialist | pumpSpec.modifiable.provides in pumpSpec.modifiable
 }
+*/
 
 /*
 //supremeLeader constraints
 fact{
-	all control : Control , supremeLeader : SupremeLeader | control in supremeLeader.modifiable_control
+	all control : Control , supremeLeader : SupremeLeader | control in supremeLeader.modifiable
 }
 
 fact{
-	all control : Control , supremeLeader : SupremeLeader | control in supremeLeader.visible_control
+	all control : Control , supremeLeader : SupremeLeader | control in supremeLeader.visible
 }
 
 fact {
-	all signal : Signal, supremeLeader : SupremeLeader | signal in supremeLeader.modifiable_signal
+	all signal : Signal, supremeLeader : SupremeLeader | signal in supremeLeader.modifiable
 }
 
 fact {
-	all signal : Signal, supremeLeader : SupremeLeader | signal in supremeLeader.visible_signal
+	all signal : Signal, supremeLeader : SupremeLeader | signal in supremeLeader.visible
 }
 */
+//modifiablity constraint
+fact{
+	all spec: Specialist{
+		all o : EObject{
+			o in spec.modifiable <=> ( o in Control and 
+										( (o.type=FanCtrl and spec in FanSpecialist) or
+										  (o.type=PumpCtrl and spec in PumpSpecialist) or
+									   	  (o.type=HeaterCtrl and spec in HeaterSpecialist) ) and
+										   o in spec.responsibility.^submodules) or
+									 ( o in Signal and o in spec.modifiable.provides ) 
+}
+}
+}
+
+//visiblity constraint
+fact{
+	all spec: Specialist{
+		all o : EObject{
+			o in spec.visible    <=> ( o in Control and 
+									   o.~submodules.protectedIP=False and 
+									   o in spec.modifiable.~submodules.submodules ) or
+									   (o in Signal and  o in spec.visible.provides)
+}
+}
+}
 
 
 
@@ -123,7 +147,7 @@ fact {
 	all control : Control { some composit : Composit | control in composit.submodules }
 }
 
-
+/*
 
 //még nem jó
 //minden specialist látja azokat a control - okat amelyek az általa szerkeszthető control-okkal egy
@@ -135,9 +159,9 @@ fact {
 
 fact{ 
 	all spec : Specialist{
-				all control : Control | ( /*control.~submodules.protectedIP=False 
-								and */ control in spec.modifiable_control ) implies
-								control.~submodules.submodules in spec.visible_control
+				all control : Control | ( control.~submodules.protectedIP=False 
+								and control in spec.modifiable ) implies
+								control.~submodules.submodules in spec.visible
 	}
 }
 
@@ -145,25 +169,26 @@ fact{
 //compositban vannak vele, és a composit nem védett
 fact{
 	all control : Control {
-		all spec : Specialist |  control in spec.visible_control implies
-								spec.modifiable_control in control.~submodules.submodules
+		all spec : Specialist |  control in spec.visible implies
+								spec.modifiable in control.~submodules.submodules
 	}
 }
 
 fact{
 	all spec : Specialist {
-		all control : Control | control not in spec.visible_control 
-								or control.provides in spec.visible_signal
+		all control : Control | control not in spec.visible 
+								or control.provides in spec.visible
 	}
 }
+
 
 fact{
 	all spec : Specialist {
-		all comp : Composit | spec.modifiable_control not in comp.submodules
-							  or comp.provides in spec.visible_signal 
+		all comp : Composit | spec.modifiable not in comp.submodules
+							  or comp.provides in spec.visible 
 	}
 }
-
+*/
 
 fact{
 	all mod1, mod2 : Module{
@@ -211,7 +236,7 @@ fact{
 		 o2.protectedIP = False and
 		 o10.type = FanCtrl and
 		 o7.type=PumpCtrl and 
-		 o10 in fanSpec.modifiable_control   
+		 o10 in fanSpec.modifiable   
 }
 
 
