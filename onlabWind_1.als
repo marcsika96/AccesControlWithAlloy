@@ -5,7 +5,6 @@ abstract sig Module extends EObject{
 
 sig Composit extends Module{
 	submodules: set Module,
-//	vendor: one Vendor,
 	protectedIP: one ProtectedIP
 }
 
@@ -18,9 +17,6 @@ sig Control extends Module{
 abstract sig EObject{}
 
 sig Signal extends EObject{}
-
-//abstract sig Vendor {}
-//one sig A, B, C extends Vendor {}
 
 abstract sig ProtectedIP {}
 one sig True, False extends ProtectedIP {}
@@ -42,11 +38,13 @@ abstract sig Specialist{
 }
 
 sig  FanSpecialist, HeaterSpecialist, PumpSpecialist extends Specialist {}
+
 //one sig SupremeLeader extends Specialist {}
 
 //constraints
 
 //facSpecialist constraints
+
 fact{
 	all fanSpec : FanSpecialist | fanSpec.modifiable_control.type in FanCtrl
 }
@@ -104,6 +102,8 @@ fact {
 }
 */
 
+
+
 //other constraints
 fact{
 	all signal : Signal { one myModule : Module | signal in myModule.provides }
@@ -113,13 +113,7 @@ fact {
 	all control : Control { some composit : Composit | control in composit.submodules }
 }
 
-fact{
-	all spec : Specialist { some control : Control | control in spec.modifiable_control}
-}
 
-fact{
-	all control : Control { some spec : Specialist | spec.modifiable_control in control}
-}
 
 //még nem jó
 //minden specialist látja azokat a control - okat amelyek az általa szerkeszthető control-okkal egy
@@ -128,15 +122,14 @@ fact{
 //egy compositban levő controlok illetve a composit által vannak providolva és a comopsit nem
 //védett.
 // Control látható ha -- constraint
+
 fact{ 
 	all spec : Specialist{
-				all control : Control | ( control.~submodules.protectedIP=False 
-								and control in spec.modifiable_control ) implies
+				all control : Control | ( /*control.~submodules.protectedIP=False 
+								and */ control in spec.modifiable_control ) implies
 								control.~submodules.submodules in spec.visible_control
 	}
 }
-
-
 
 //egy control csak akkor látható egy specialist számára ha az általa szerkezthető conrtolok egy 
 //compositban vannak vele, és a composit nem védett
@@ -184,7 +177,40 @@ fact{
 	no mod : Module | mod in mod.^submodules 
 }
 
-run {} 
+fact{
+	some fanSpec : FanSpecialist{
+	some disj o2 , o10, o7, o3, o4, o5, o6, o8, o9, o11, o12 : EObject |
+		 o10 in o2.submodules and
+		 o7 in o2.submodules and
+		 o3 in o2.provides and
+		 o4 in o2.provides and
+		 o5 in o2.provides and
+		 o6 in o2.provides and
+		 o8 in o7.provides and
+		 o9 in o7.provides and
+		 o11 in o10.provides and
+		 o12 in o10.provides and
+		 o11 in o7.consumes and
+		 o12 in o7.consumes and
+		 o8 in o10.consumes and
+		 o9 in o10.consumes and
+		
+		 o2.protectedIP = False and
+		 o10.type = FanCtrl and
+		 o7.type=PumpCtrl and 
+		 o10 in fanSpec.modifiable_control   
+}
+}
+
+
+run {} for 15
+
+/*for  /*exactly 8 EObject,
+			exactly 5 Control,
+			exactly 2 Composit,
+			exactly 5 Signal,
+			exactly 0 Specialist
+*/
 
 	
 
