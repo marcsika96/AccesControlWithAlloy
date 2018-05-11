@@ -5,7 +5,8 @@ abstract sig Module extends EObject{
 
 sig Composit extends Module{
 	submodules: set Module,
-	protectedIP: one ProtectedIP
+	protectedIP: one ProtectedIP,
+	
 }
 
 sig Control extends Module{
@@ -34,7 +35,8 @@ abstract sig Specialist{
 	modifiable_control: set Control,
 	visible_control: set Control,
 	modifiable_signal: set Signal, 
-	visible_signal: set Signal
+	visible_signal: set Signal,
+    responsibility : set Composit
 }
 
 sig  FanSpecialist, HeaterSpecialist, PumpSpecialist extends Specialist {}
@@ -42,6 +44,14 @@ sig  FanSpecialist, HeaterSpecialist, PumpSpecialist extends Specialist {}
 //one sig SupremeLeader extends Specialist {}
 
 //constraints
+
+fact{
+	all spec : Specialist{
+		all comp : Composit{
+			comp not in spec.responsibility implies comp.submodules not in spec.modifiable_control
+		}
+	}
+}
 
 //facSpecialist constraints
 
@@ -177,9 +187,12 @@ fact{
 	no mod : Module | mod in mod.^submodules 
 }
 
+one sig o2 extends Composit{}
+one sig o7 ,o10 extends Control{}
+one sig o3, o4, o5, o6, o8, o9, o11, o12 extends Signal{} 
+one sig fanSpec extends FanSpecialist{}
+
 fact{
-	some fanSpec : FanSpecialist{
-	some disj o2 , o10, o7, o3, o4, o5, o6, o8, o9, o11, o12 : EObject |
 		 o10 in o2.submodules and
 		 o7 in o2.submodules and
 		 o3 in o2.provides and
@@ -199,7 +212,6 @@ fact{
 		 o10.type = FanCtrl and
 		 o7.type=PumpCtrl and 
 		 o10 in fanSpec.modifiable_control   
-}
 }
 
 
