@@ -5,14 +5,12 @@ abstract sig Module extends EObject{
 
 sig Composit extends Module{
 	submodules: set Module,
-	protectedIP: one ProtectedIP,
-	
+	protectedIP: one ProtectedIP	
 }
 
 sig Control extends Module{
 	type: one ControlUnitType,
 	cycle: one Cycle
-
 }
 
 abstract sig EObject{}
@@ -111,17 +109,49 @@ fact {
 }
 */
 //modifiablity constraint
+/*
 fact{
 	all spec: Specialist{
 		all o : EObject{
-			o in spec.modifiable <=> ( o in Control and 
+			(spec->o in modifiable) <=> (( o in Control and 
 										( (o.type=FanCtrl and spec in FanSpecialist) or
 										  (o.type=PumpCtrl and spec in PumpSpecialist) or
 									   	  (o.type=HeaterCtrl and spec in HeaterSpecialist) ) and
-										   o in spec.responsibility.^submodules) or
+										   o in spec.responsibility.submodules)) or
 									 ( o in Signal and o in spec.modifiable.provides ) 
 }
 }
+}*/
+
+/*
+fact{
+	all o : EObject{
+		all spec : Specialist{
+			(o in Signal and o in spec.modifiable.provides) iff ((o.~provides in spec.modifiable) and 
+																(o.~provides.type=FanCtrl and spec in FanSpecialist) or
+										  						(o.~provides.type=PumpCtrl and spec in PumpSpecialist) or
+									   	  						(o.~provides.type=HeaterCtrl and spec in HeaterSpecialist)) and
+																o in spec.modifiable
+}
+}
+}*/
+
+fact {
+	all o: EObject, s: Specialist {
+		(s->o in modifiable)
+			<=>
+		(some control : Control {
+			(control in s.responsibility.^submodules) 
+				and
+			(o = control or o in control.provides)
+				and
+			((control.type=FanCtrl and s in FanSpecialist)
+				or
+			 (control.type=PumpCtrl and s in PumpSpecialist)
+				or
+		   	 (control.type=HeaterCtrl and s in HeaterSpecialist))
+		})
+	}
 }
 
 //visiblity constraint
@@ -144,7 +174,7 @@ fact{
 }
 
 fact {
-	all control : Control { some composit : Composit | control in composit.submodules }
+	all control : Control { one composit : Composit | control in composit.submodules }
 }
 
 /*
@@ -196,7 +226,7 @@ fact{
 			(signal in mod1.provides and signal in mod2.consumes) implies 
 				mod1.~submodules = mod2.~submodules
 		}
-	}
+	} 
 }
 
 fact{
@@ -240,6 +270,7 @@ fact{
 }
 
 
+--fact {some s1, s2: Specialist {s1.modifiable != s2.modifiable and s1.modifiable in s2.modifiable and s1.modifiable != none}}
 run {} for 15
 
 /*for  /*exactly 8 EObject,
