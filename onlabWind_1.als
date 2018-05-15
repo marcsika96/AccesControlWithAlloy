@@ -32,7 +32,7 @@ one sig FanCtrl, HeaterCtrl, PumpCtrl extends ControlUnitType {}
 abstract sig Specialist{
 	modifiable: set EObject,
 	visible: set EObject,
-    responsibility : set Composit
+    responsibility : one Composit
 }
 
 sig  FanSpecialist, HeaterSpecialist, PumpSpecialist extends Specialist {}
@@ -156,16 +156,19 @@ fact {
 
 //visiblity constraint
 fact{
-	all spec: Specialist{
-		all o : EObject{
-			o in spec.visible    <=> ( o in Control and 
-									   o.~submodules.protectedIP=False and 
-									   o in spec.modifiable.~submodules.submodules ) or
-									   (o in Signal and  o in spec.visible.provides)
-}
-}
-}
+	all s: Specialist, o : EObject{
+			(s->o in visible)    
+				<=> 
+			((o in s.responsibility)
+			    or 
+			(o in s.responsibility.^submodules)
+			    or 
+			(o in s.responsibility.provides)
+		   	    or 
+			(o in s.responsibility.^submodules.provides))
 
+}
+}
 
 
 //other constraints
@@ -175,6 +178,10 @@ fact{
 
 fact {
 	all control : Control { one composit : Composit | control in composit.submodules }
+}
+
+fact {
+	all m: Module, c1,c2: Composit {m in c1.submodules and m in c2.submodules implies c1 = c2 }
 }
 
 /*
@@ -241,7 +248,8 @@ fact{
 fact{
 	no mod : Module | mod in mod.^submodules 
 }
-
+/*
+//visible part
 one sig o2 extends Composit{}
 one sig o7 ,o10 extends Control{}
 one sig o3, o4, o5, o6, o8, o9, o11, o12 extends Signal{} 
@@ -249,7 +257,9 @@ one sig fanSpec extends FanSpecialist{}
 
 fact{
 		 o10 in o2.submodules and
+		 o10.cycle = High and
 		 o7 in o2.submodules and
+	     o7.cycle = High and
 		 o3 in o2.provides and
 		 o4 in o2.provides and
 		 o5 in o2.provides and
@@ -270,15 +280,70 @@ fact{
 }
 
 
---fact {some s1, s2: Specialist {s1.modifiable != s2.modifiable and s1.modifiable in s2.modifiable and s1.modifiable != none}}
-run {} for 15
-
-/*for  /*exactly 8 EObject,
-			exactly 5 Control,
-			exactly 2 Composit,
-			exactly 5 Signal,
-			exactly 0 Specialist
+fact{
+		fanSpec.visible = (o2 + o3 + o4 + o5 + o6 + o7 + o8 + o9 + o10 + o11 + o12)
+}
 */
 
-	
 
+//fact {some s1, s2: Specialist {s1.visible != s2.visible and s1.visible in s2.visible and s1.visible != none}}
+/*run {}
+for  exactly 0 EObject,
+	exactly 5 Control,
+			exactly 2 Composit,
+			exactly 5 Signal,
+			exactly 0 Specialist*/
+run {} for exactly 15 EObject,exactly 5 Control, exactly 5 Signal, 0 Specialist
+/*
+run {} for  exactly 0 EObject,exactly 0 Specialist
+run {} for  exactly 1 EObject,exactly 0 Specialist
+run {} for  exactly 2 EObject,exactly 0 Specialist
+run {} for  exactly 3 EObject,exactly 0 Specialist
+run {} for  exactly 4 EObject,exactly 0 Specialist
+run {} for  exactly 5 EObject,exactly 0 Specialist
+run {} for  exactly 6 EObject,exactly 0 Specialist
+run {} for  exactly 7 EObject,exactly 0 Specialist
+run {} for  exactly 8 EObject,exactly 0 Specialist
+run {} for  exactly 9 EObject,exactly 0 Specialist
+run {} for  exactly 10 EObject,exactly 0 Specialist
+run {} for  exactly 11 EObject,exactly 0 Specialist
+run {} for  exactly 12 EObject,exactly 0 Specialist
+run {} for  exactly 13 EObject,exactly 0 Specialist
+run {} for  exactly 14 EObject,exactly 0 Specialist
+run {} for  exactly 15 EObject,exactly 0 Specialist
+run {} for  exactly 16 EObject,exactly 0 Specialist
+run {} for  exactly 17 EObject,exactly 0 Specialist
+run {} for  exactly 18 EObject,exactly 0 Specialist
+run {} for  exactly 19 EObject,exactly 0 Specialist
+run {} for  exactly 20 EObject,exactly 0 Specialist
+run {} for  exactly 21 EObject,exactly 0 Specialist
+run {} for  exactly 22 EObject,exactly 0 Specialist
+run {} for  exactly 23 EObject,exactly 0 Specialist
+run {} for  exactly 24 EObject,exactly 0 Specialist
+run {} for  exactly 25 EObject,exactly 0 Specialist
+run {} for  exactly 26 EObject,exactly 0 Specialist
+run {} for  exactly 27 EObject,exactly 0 Specialist
+run {} for  exactly 28 EObject,exactly 0 Specialist
+run {} for  exactly 29 EObject,exactly 0 Specialist
+run {} for  exactly 30 EObject,exactly 0 Specialist
+run {} for  exactly 31 EObject,exactly 0 Specialist
+run {} for  exactly 32 EObject,exactly 0 Specialist
+run {} for  exactly 33 EObject,exactly 0 Specialist
+run {} for  exactly 34 EObject,exactly 0 Specialist
+run {} for  exactly 35 EObject,exactly 0 Specialist
+run {} for  exactly 36 EObject,exactly 0 Specialist
+run {} for  exactly 37 EObject,exactly 0 Specialist
+run {} for  exactly 38 EObject,exactly 0 Specialist
+run {} for  exactly 39 EObject,exactly 0 Specialist
+run {} for  exactly 40 EObject,exactly 0 Specialist
+run {} for  exactly 41 EObject,exactly 0 Specialist
+run {} for  exactly 42 EObject,exactly 0 Specialist
+run {} for  exactly 43 EObject,exactly 0 Specialist
+run {} for  exactly 44 EObject,exactly 0 Specialist
+run {} for  exactly 45 EObject,exactly 0 Specialist
+run {} for  exactly 46 EObject,exactly 0 Specialist
+run {} for  exactly 47 EObject,exactly 0 Specialist
+run {} for  exactly 48 EObject,exactly 0 Specialist
+run {} for  exactly 49 EObject,exactly 0 Specialist
+run {} for  exactly 50 EObject,exactly 0 Specialist
+*/
